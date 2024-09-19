@@ -31,6 +31,22 @@ class CompetitionsScreen extends StatelessWidget {
               mainAxisSpacing: 15,
               children: [
                 GestureDetector(
+                  child: LeagueContainer(
+                    image: 'assets/ucl.png',
+                    key: GlobalKey(),
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TableScreen(
+                              code: 'CL',
+                              key: GlobalKey(),
+                              name: 'UEFA Champions League'),
+                        ));
+                  },
+                ),
+                GestureDetector(
                   child:
                       LeagueContainer(image: 'assets/pl.png', key: GlobalKey()),
                   onTap: () {
