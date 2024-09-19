@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "253440737072",
+    "project_id": "krasi-score",
+    "storage_bucket": "krasi-score.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:253440737072:android:9e1792ddddef0f6839d2f5",
+        "android_client_info": {
+          "package_name": "com.hesham.LiveScore"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfW24NZTr_XcJfsqzn-DEMWA742Ud1hFo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
