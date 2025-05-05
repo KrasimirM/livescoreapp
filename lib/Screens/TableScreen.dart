@@ -1,8 +1,7 @@
 import 'dart:convert';
-
+import 'package:LiveScore/services/HttpService.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:http/http.dart' as http;
+import 'package:LiveScore/constants.dart';
 
 class TableScreen extends StatefulWidget {
   final String code;
@@ -15,6 +14,7 @@ class TableScreen extends StatefulWidget {
 
 class _TableScreenState extends State<TableScreen> {
   List _table = [];
+  final HttpService _httpService = HttpService();
 
   @override
   void initState() {
@@ -25,24 +25,23 @@ class _TableScreenState extends State<TableScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue,
       appBar: AppBar(
         title: Text(widget.name),
         automaticallyImplyLeading: true,
-        backgroundColor: Colors.blue,
+        backgroundColor: AppColors.primaryColor,
       ),
-      body: _table == []
+      body: _table.isEmpty
           ? Container(
-              color: Colors.white,
+              color: AppColors.backgroundColor,
               child: Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Color(0xFFe70066),
-                  ),
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppColors.accentColor),
                 ),
               ),
             )
           : Container(
+              color: AppColors.backgroundColor,
               child: ListView(
                 physics: const BouncingScrollPhysics(
                     parent: AlwaysScrollableScrollPhysics()),
@@ -60,14 +59,20 @@ class _TableScreenState extends State<TableScreen> {
                             children: [
                               Text(
                                 'Pos',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textColor,
+                                ),
                               ),
                               SizedBox(
                                 width: 20,
                               ),
                               Text(
                                 'Club',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textColor,
+                                ),
                               ),
                             ],
                           ),
@@ -78,27 +83,45 @@ class _TableScreenState extends State<TableScreen> {
                             children: [
                               Text(
                                 'PL',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textColor,
+                                ),
                               ),
                               Text(
                                 'W',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textColor,
+                                ),
                               ),
                               Text(
                                 'D',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textColor,
+                                ),
                               ),
                               Text(
                                 'L',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textColor,
+                                ),
                               ),
                               Text(
                                 'GD',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textColor,
+                                ),
                               ),
                               Text(
                                 'Pts',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textColor,
+                                ),
                               ),
                             ],
                           ),
@@ -117,16 +140,14 @@ class _TableScreenState extends State<TableScreen> {
   }
 
   getTable() async {
-    http.Response response = await http.get(
-        Uri.parse(
-            'http://api.football-data.org/v4/competitions/${widget.code}/standings'),
-        headers: {'X-Auth-Token': '27f54ff1ab4b4d2cbbb3d0c34084d70a'});
-    String body = response.body;
-    Map data = jsonDecode(body);
-    List table = data['standings'][0]['table'];
-    setState(() {
-      _table = table;
-    });
+    try {
+      final table = await _httpService.fetchTable(widget.code);
+      setState(() {
+        _table = table;
+      });
+    } catch (e) {
+      print('Error fetching table: $e');
+    }
   }
 
   Widget buildTable() {
@@ -141,8 +162,14 @@ class _TableScreenState extends State<TableScreen> {
                 child: Row(
                   children: [
                     team['position'].toString().length > 1
-                        ? Text(team['position'].toString() + ' - ')
-                        : Text(" " + team['position'].toString() + ' - '),
+                        ? Text(
+                            team['position'].toString() + ' - ',
+                            style: TextStyle(color: AppColors.textColor),
+                          )
+                        : Text(
+                            " " + team['position'].toString() + ' - ',
+                            style: TextStyle(color: AppColors.textColor),
+                          ),
                     Row(
                       children: [
                         Container(
@@ -154,11 +181,17 @@ class _TableScreenState extends State<TableScreen> {
                           ),
                         ),
                         team['team']['shortName'].toString().length > 11
-                            ? Text(team['team']['shortName']
-                                    .toString()
-                                    .substring(0, 11) +
-                                '...')
-                            : Text(team['team']['shortName'].toString()),
+                            ? Text(
+                                team['team']['shortName']
+                                        .toString()
+                                        .substring(0, 11) +
+                                    '...',
+                                style: TextStyle(color: AppColors.textColor),
+                              )
+                            : Text(
+                                team['team']['shortName'].toString(),
+                                style: TextStyle(color: AppColors.textColor),
+                              ),
                       ],
                     ),
                   ],
@@ -168,12 +201,30 @@ class _TableScreenState extends State<TableScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(team['playedGames'].toString()),
-                    Text(team['won'].toString()),
-                    Text(team['draw'].toString()),
-                    Text(team['lost'].toString()),
-                    Text(team['goalDifference'].toString()),
-                    Text(team['points'].toString()),
+                    Text(
+                      team['playedGames'].toString(),
+                      style: TextStyle(color: AppColors.textColor),
+                    ),
+                    Text(
+                      team['won'].toString(),
+                      style: TextStyle(color: AppColors.textColor),
+                    ),
+                    Text(
+                      team['draw'].toString(),
+                      style: TextStyle(color: AppColors.textColor),
+                    ),
+                    Text(
+                      team['lost'].toString(),
+                      style: TextStyle(color: AppColors.textColor),
+                    ),
+                    Text(
+                      team['goalDifference'].toString(),
+                      style: TextStyle(color: AppColors.textColor),
+                    ),
+                    Text(
+                      team['points'].toString(),
+                      style: TextStyle(color: AppColors.textColor),
+                    ),
                   ],
                 ),
               ),

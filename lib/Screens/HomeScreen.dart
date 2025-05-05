@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'CompetitionScreen.dart';
 import 'FavouriteTeamScreen.dart';
 import 'Profile_screen.dart';
+import 'package:LiveScore/constants.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -26,23 +27,22 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue,
       body: Container(
         decoration: BoxDecoration(
-            gradient: LinearGradient(
-          colors: [
-            Color.fromARGB(255, 72, 176, 232),
-            Color.fromARGB(255, 0, 23, 231),
-          ],
-          begin: const FractionalOffset(0.0, 0.0),
-          end: const FractionalOffset(0.0, 1.0),
-          stops: [0.0, 1.0],
-          tileMode: TileMode.clamp,
-        )),
+          gradient: LinearGradient(
+            colors: [
+              AppColors.primaryColor,
+              AppColors.accentColor,
+            ],
+            begin: const FractionalOffset(0.0, 0.0),
+            end: const FractionalOffset(0.0, 1.0),
+            stops: [0.0, 1.0],
+            tileMode: TileMode.clamp,
+          ),
+        ),
         child: _screens[_selectedIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.sports_soccer),
@@ -58,8 +58,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
+        selectedItemColor: AppColors.accentColor,
+        unselectedItemColor: AppColors.subtitleTextColor,
         onTap: _onItemTapped,
+        backgroundColor: AppColors.backgroundColor,
       ),
     );
   }

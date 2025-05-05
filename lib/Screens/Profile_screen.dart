@@ -70,7 +70,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 },
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.white,
-                  backgroundColor: Colors.pinkAccent,
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
                 child: Text('Logout'),

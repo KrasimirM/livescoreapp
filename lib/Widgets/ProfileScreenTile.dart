@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:LiveScore/constants.dart';
 
 class ProfileScreenTile extends StatelessWidget {
   final String name;
@@ -12,7 +13,7 @@ class ProfileScreenTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: Colors.pinkAccent,
+      color: AppColors.cardBackgroundColor,
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: ListTile(
         title: Text(
@@ -20,14 +21,14 @@ class ProfileScreenTile extends StatelessWidget {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: Colors.white,
+            color: AppColors.textColor,
           ),
         ),
         subtitle: Text(
           label,
           style: TextStyle(
             fontSize: 14,
-            color: Colors.white,
+            color: AppColors.subtitleTextColor,
           ),
         ),
       ),

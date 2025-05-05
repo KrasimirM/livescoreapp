@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:LiveScore/Screens/TableScreen.dart';
-import 'package:LiveScore/Widgets/LeagueContainer.dart';
+import 'package:LiveScore/Widgets/LeagueCard.dart'; // Import the new widget
 
 class CompetitionsScreen extends StatelessWidget {
   @override
@@ -30,105 +29,40 @@ class CompetitionsScreen extends StatelessWidget {
               crossAxisSpacing: 15,
               mainAxisSpacing: 15,
               children: [
-                GestureDetector(
-                  child: LeagueContainer(
-                    image: 'assets/ucl.png',
-                    key: GlobalKey(),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TableScreen(
-                              code: 'CL',
-                              key: GlobalKey(),
-                              name: 'UEFA Champions League'),
-                        ));
-                  },
+                LeagueCard(
+                  image: 'assets/ucl.png',
+                  code: 'CL',
+                  name: 'UEFA Champions League',
                 ),
-                GestureDetector(
-                  child:
-                      LeagueContainer(image: 'assets/pl.png', key: GlobalKey()),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TableScreen(
-                              code: 'PL',
-                              key: GlobalKey(),
-                              name: 'Premier League'),
-                        ));
-                  },
+                LeagueCard(
+                  image: 'assets/pl.png',
+                  code: 'PL',
+                  name: 'Premier League',
                 ),
-                GestureDetector(
-                  child: LeagueContainer(
-                    image: 'assets/laliga.png',
-                    key: GlobalKey(),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TableScreen(
-                              code: 'PD', key: GlobalKey(), name: 'LaLiga'),
-                        ));
-                  },
+                LeagueCard(
+                  image: 'assets/laliga.png',
+                  code: 'PD',
+                  name: 'LaLiga',
                 ),
-                GestureDetector(
-                  child: LeagueContainer(
-                    image: 'assets/bundesliga.png',
-                    key: GlobalKey(),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TableScreen(
-                              code: 'BL1',
-                              key: GlobalKey(),
-                              name: 'Bundesliga'),
-                        ));
-                  },
+                LeagueCard(
+                  image: 'assets/bundesliga.png',
+                  code: 'BL1',
+                  name: 'Bundesliga',
                 ),
-                GestureDetector(
-                  child: LeagueContainer(
-                      image: 'assets/seria.png', key: GlobalKey()),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TableScreen(
-                              code: 'SA', key: GlobalKey(), name: 'Seria A'),
-                        ));
-                  },
+                LeagueCard(
+                  image: 'assets/seria.png',
+                  code: 'SA',
+                  name: 'Seria A',
                 ),
-                GestureDetector(
-                  child: LeagueContainer(
-                    image: 'assets/ligue1.png',
-                    key: GlobalKey(),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TableScreen(
-                              code: 'FL1', key: GlobalKey(), name: 'Ligue1'),
-                        ));
-                  },
+                LeagueCard(
+                  image: 'assets/ligue1.png',
+                  code: 'FL1',
+                  name: 'Ligue1',
                 ),
-                GestureDetector(
-                  child: LeagueContainer(
-                    image: 'assets/nos.png',
-                    key: GlobalKey(),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TableScreen(
-                              code: 'PPL', key: GlobalKey(), name: 'Liga nos'),
-                        ));
-                  },
+                LeagueCard(
+                  image: 'assets/nos.png',
+                  code: 'PPL',
+                  name: 'Liga nos',
                 ),
               ],
             )
