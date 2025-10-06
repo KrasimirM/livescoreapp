@@ -1,6 +1,8 @@
-import 'package:LiveScore/Screens/MatchScreen.dart';
+// widgets/match_tile.dart
 import 'package:flutter/material.dart';
 import 'package:LiveScore/constants.dart';
+import 'package:LiveScore/Screens/MatchScreen.dart';
+import 'package:LiveScore/Screens/UpcomingMatchScreen.dart';
 
 class MatchTile extends StatelessWidget {
   final Map match;
@@ -14,34 +16,16 @@ class MatchTile extends StatelessWidget {
     return Card(
       color: AppColors.cardBackgroundColor,
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        contentPadding: EdgeInsets.all(16),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _TeamBadge(team: match['homeTeam']),
-            isUpcoming
-                ? Text(
-                    'Upcoming',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange,
-                    ),
-                  )
-                : Text(
-                    '${match['score']['fullTime']['home']} - ${match['score']['fullTime']['away']}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-            _TeamBadge(team: match['awayTeam']),
-          ],
-        ),
+      child: InkWell(
         onTap: () {
-          if (!isUpcoming) {
+          if (isUpcoming) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => UpcomingMatchScreen(match: match),
+              ),
+            );
+          } else {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -51,6 +35,33 @@ class MatchTile extends StatelessWidget {
             );
           }
         },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _TeamBadge(team: match['homeTeam']),
+              isUpcoming
+                  ? Text(
+                      'Upcoming',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    )
+                  : Text(
+                      '${match['score']['fullTime']['home']} - ${match['score']['fullTime']['away']}',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+              _TeamBadge(team: match['awayTeam']),
+            ],
+          ),
+        ),
       ),
     );
   }

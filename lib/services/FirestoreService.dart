@@ -35,4 +35,72 @@ class FirestoreService {
       print('User not found with email: $email');
     }
   }
+
+  Future<void> saveQuiz(Map<String, dynamic> quizData) async {
+    try {
+      await _firestore.collection('quizzes').add({
+        'title': quizData['title'],
+        'questions': quizData['questions'],
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      print('Quiz saved successfully');
+    } catch (e) {
+      print('Error saving quiz: $e');
+    }
+  }
+
+  Future<List<QueryDocumentSnapshot>> fetchQuizzes() async {
+    try {
+      final snapshot = await _firestore
+          .collection('quizzes')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      print(snapshot.docs);
+
+      return snapshot.docs;
+    } catch (e) {
+      print('Error fetching quizzes: $e');
+      return [];
+    }
+  }
+
+  Future<bool> hasUserAnsweredQuiz(String userId, String quizId) async {
+    final result = await _firestore
+        .collection('quizResults')
+        .where('userId', isEqualTo: userId)
+        .where('quizId', isEqualTo: quizId)
+        .get();
+    return result.docs.isNotEmpty;
+  }
+
+  Future<void> saveQuizResult(
+      String userId, String quizId, int score, int totalQuestions) async {
+    try {
+      await _firestore.collection('quizResults').add({
+        'userId': userId,
+        'quizId': quizId,
+        'score': score,
+        'totalQuestions': totalQuestions,
+        'answeredAt': FieldValue.serverTimestamp(),
+      });
+      print('Quiz result saved successfully');
+    } catch (e) {
+      print('Error saving quiz result: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>?> getQuizResultForUser(
+      String userId, String quizId) async {
+    final result = await _firestore
+        .collection('quizResults')
+        .where('userId', isEqualTo: userId)
+        .where('quizId', isEqualTo: quizId)
+        .get();
+
+    if (result.docs.isNotEmpty) {
+      return result.docs.first.data();
+    }
+    return null;
+  }
 }

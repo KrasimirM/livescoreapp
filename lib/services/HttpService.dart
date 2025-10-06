@@ -59,6 +59,97 @@ class HttpService {
   Future<Map<String, dynamic>> fetchMatchDetails(String matchId) async {
     final url = '/matches/$matchId';
     final data = await getRequest(url);
+
     return data;
+  }
+
+  Future<Map<String, dynamic>> fetchHeadToHead(
+      String matchId, Map match) async {
+    // Fetch head-to-head data from API
+    final url = '/matches/$matchId/head2head?limit=50';
+    final data = await getRequest(url);
+
+    // Extract aggregates
+    final aggregates = data['aggregates'];
+    if (aggregates == null) return {};
+
+    final matchHomeId = match['homeTeam']['id'];
+    final matchAwayId = match['awayTeam']['id'];
+
+    List matches = data['matches'] ?? [];
+    int homeWins = 0, awayWins = 0, draws = 0;
+    double homeGoals = 0, awayGoals = 0;
+
+    // Iterate through all previous encounters
+    for (int i = 0; i < matches.length; i++) {
+      var m = matches[i];
+      var hId = m['homeTeam']['id'];
+      var aId = m['awayTeam']['id'];
+
+      // Skip unrelated matches
+      if ((hId != matchHomeId && hId != matchAwayId) ||
+          (aId != matchHomeId && aId != matchAwayId)) continue;
+
+      int hScore = m['score']['fullTime']['home'] ?? 0;
+      int aScore = m['score']['fullTime']['away'] ?? 0;
+
+      // Apply recent form weighting: last 5 matches = 1.5x weight
+      double weight = (i >= matches.length - 5) ? 1.5 : 1.0;
+
+      // Accumulate goals (could be used for tie-breakers or advanced algo)
+      homeGoals += hScore * weight;
+      awayGoals += aScore * weight;
+
+      // Determine winner and accumulate wins/losses with weight
+      if (hScore > aScore) {
+        if (hId == matchHomeId)
+          homeWins += (1 * weight).round();
+        else
+          awayWins += (1 * weight).round();
+      } else if (hScore < aScore) {
+        if (aId == matchAwayId)
+          awayWins += (1 * weight).round();
+        else
+          homeWins += (1 * weight).round();
+      } else {
+        draws += (1 * weight).round();
+      }
+    }
+
+    // Add simple home advantage boost
+    homeWins += 1;
+
+    int total = homeWins + draws + awayWins;
+    if (total == 0) total = 1; // Avoid division by zero
+
+    // Normalize so that sum = 100%
+    double homeChance = (homeWins / total) * 100;
+    double drawChance = (draws / total) * 100;
+    double awayChance = (awayWins / total) * 100;
+
+    // Adjust slightly to ensure rounding doesn't exceed 100%
+    double totalChance = homeChance + drawChance + awayChance;
+    homeChance = homeChance / totalChance * 100;
+    drawChance = drawChance / totalChance * 100;
+    awayChance = awayChance / totalChance * 100;
+
+    return {
+      'homeTeam': {
+        'name': match['homeTeam']['name'],
+        'chance': homeChance.toStringAsFixed(1),
+      },
+      'draw': drawChance.toStringAsFixed(1),
+      'awayTeam': {
+        'name': match['awayTeam']['name'],
+        'chance': awayChance.toStringAsFixed(1),
+      },
+      'matches': matches
+          .where((m) =>
+              (m['homeTeam']['id'] == matchHomeId &&
+                  m['awayTeam']['id'] == matchAwayId) ||
+              (m['homeTeam']['id'] == matchAwayId &&
+                  m['awayTeam']['id'] == matchHomeId))
+          .toList(),
+    };
   }
 }

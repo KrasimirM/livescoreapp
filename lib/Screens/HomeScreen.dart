@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'CompetitionScreen.dart';
 import 'FavouriteTeamScreen.dart';
 import 'Profile_screen.dart';
+import 'QuizScreen.dart';
 import 'package:LiveScore/constants.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Widget> _screens = [
     CompetitionsScreen(),
     Favouriteteamscreen(),
+    QuizScreen(),
     ProfileScreen(),
   ];
 
@@ -51,6 +53,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
             label: 'Favourite Teams',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.quiz),
+            label: 'Quiz',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

@@ -15,6 +15,8 @@ class MatchScreen extends StatefulWidget {
 class _MatchScreenState extends State<MatchScreen> {
   late Future<Map<String, dynamic>> matchDetails;
   final HttpService _httpService = HttpService();
+  Map<String, dynamic>? headToHeadStats;
+  bool loadingH2H = false;
 
   @override
   void initState() {
@@ -47,14 +49,14 @@ class _MatchScreenState extends State<MatchScreen> {
             final competition = matchData['competition'];
             final area = matchData['area'];
             final referees = matchData['referees'];
-
             DateTime matchDate = DateTime.parse(matchData['utcDate']);
             String formattedDate =
                 DateFormat('d MMM, yyyy – H:mm').format(matchDate);
 
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView(
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _MatchResultCard(homeTeam, awayTeam, score, halfTime),
                   SizedBox(height: 16),
@@ -64,8 +66,11 @@ class _MatchScreenState extends State<MatchScreen> {
                   _InfoCard('Area', area['name']),
                   _InfoCard('Match Status', matchData['status']),
                   SizedBox(height: 16),
-                  _InfoCard('Referee',
-                      referees != null ? referees[0]['name'] : 'N/A'),
+                  _InfoCard(
+                      'Referee',
+                      referees != null && referees.isNotEmpty
+                          ? referees[0]['name']
+                          : 'N/A'),
                 ],
               ),
             );
@@ -96,9 +101,9 @@ class _MatchResultCard extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _TeamBadge(homeTeam),
+            _TeamBadge(team: homeTeam),
             _ScoreCard(score, halfTime),
-            _TeamBadge(awayTeam),
+            _TeamBadge(team: awayTeam),
           ],
         ),
       ),
@@ -109,7 +114,7 @@ class _MatchResultCard extends StatelessWidget {
 class _TeamBadge extends StatelessWidget {
   final team;
 
-  const _TeamBadge(this.team);
+  const _TeamBadge({required this.team});
 
   @override
   Widget build(BuildContext context) {
@@ -130,8 +135,8 @@ class _TeamBadge extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
-            overflow: TextOverflow.ellipsis, // Added ellipsis for overflow
-            textAlign: TextAlign.center, // Center the name text
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
         ],
       ),

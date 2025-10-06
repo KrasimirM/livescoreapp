@@ -7,4 +7,5 @@ class AppColors {
   static const Color textColor = Colors.white;
   static const Color subtitleTextColor = Color(0xFFE5E7EB);
   static const Color cardBackgroundColor = Color(0xFF1F2937);
+  static const Color errorColor = Colors.red;
 }

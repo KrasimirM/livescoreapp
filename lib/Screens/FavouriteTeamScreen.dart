@@ -1,9 +1,12 @@
-import 'package:LiveScore/services/HttpService.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'LeagueSelectionScreen.dart';
+import 'package:LiveScore/Widgets/MatchFilter.dart';
 import 'package:LiveScore/Widgets/MatchTile.dart';
-import '../services/FirestoreService.dart';
+import 'package:LiveScore/Widgets/TeamInfo.dart';
+import 'package:LiveScore/Widgets/MatchSection.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:LiveScore/services/HttpService.dart';
+import 'package:LiveScore/services/FirestoreService.dart';
+import 'LeagueSelectionScreen.dart';
 
 class Favouriteteamscreen extends StatefulWidget {
   const Favouriteteamscreen({Key? key}) : super(key: key);
@@ -22,6 +25,8 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
   final FirestoreService _firestoreService = FirestoreService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final HttpService _httpService = HttpService();
+
+  String _selectedFilter = 'upcoming';
 
   @override
   void initState() {
@@ -100,9 +105,11 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
       children: [
         SizedBox(height: 20),
         _favoriteTeamCrest != null
-            ? Image.network(_favoriteTeamCrest!, height: 100)
+            ? TeamInfo(
+                teamName: _favoriteTeamName!,
+                crestUrl: _favoriteTeamCrest!,
+              )
             : Container(),
-        Text('$_favoriteTeamName'),
         SizedBox(height: 20),
         _matches.isEmpty
             ? CircularProgressIndicator()
@@ -112,9 +119,16 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
                     children: [
                       _buildLastPlayedMatch(),
                       SizedBox(height: 20),
-                      _buildUpcomingMatches(),
+                      MatchFilter(
+                        selectedFilter: _selectedFilter,
+                        onChanged: (String newValue) {
+                          setState(() {
+                            _selectedFilter = newValue;
+                          });
+                        },
+                      ),
                       SizedBox(height: 20),
-                      _buildPastMatches(),
+                      _buildMatchList(),
                     ],
                   ),
                 ),
@@ -142,47 +156,16 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
     );
   }
 
-  Widget _buildUpcomingMatches() {
-    if (_futureMatches.isEmpty) return Container();
-    return Column(
-      children: [
-        Text(
-          'Upcoming Matches',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        _buildMatchesList(_futureMatches),
-      ],
-    );
-  }
+  Widget _buildMatchList() {
+    List matchesToDisplay =
+        _selectedFilter == 'past' ? _pastMatches : _futureMatches;
 
-  Widget _buildPastMatches() {
-    if (_pastMatches.isEmpty) return Container();
-    return Column(
-      children: [
-        Text(
-          'Past Matches',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        _buildMatchesList(_pastMatches),
-      ],
-    );
-  }
-
-  Widget _buildMatchesList(List matches) {
     return ListView.builder(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
-      itemCount: matches.length,
+      itemCount: matchesToDisplay.length,
       itemBuilder: (context, index) {
-        return MatchTile(match: matches[index]);
+        return MatchTile(match: matchesToDisplay[index]);
       },
     );
   }
@@ -196,34 +179,28 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
     }
   }
 
-  void getMatches() async {
+  Future<void> getMatches() async {
     try {
       final now = DateTime.now();
       final oneYearAgo =
           DateTime(now.year - 1, now.month, now.day).toString().split(' ')[0];
       final today = now.toString().split(' ')[0];
 
-      // Fetch past matches
       final pastMatches = await _httpService.fetchMatches(_favoriteTeamId!,
           dateFrom: oneYearAgo, dateTo: today);
 
-      // Fetch future matches
       final nextYear =
           DateTime(now.year + 1, now.month, now.day).toString().split(' ')[0];
       final futureMatches = await _httpService.fetchMatches(_favoriteTeamId!,
           dateFrom: today, dateTo: nextYear);
 
-      // Sort past matches by date in descending order (latest first)
       pastMatches.sort((a, b) =>
           DateTime.parse(b['utcDate']).compareTo(DateTime.parse(a['utcDate'])));
 
       setState(() {
         _pastMatches = pastMatches;
         _futureMatches = futureMatches;
-        _matches = [
-          ..._pastMatches,
-          ..._futureMatches
-        ]; // Combine both past and future matches
+        _matches = _futureMatches;
       });
     } catch (e) {
       print('Error fetching matches: $e');
