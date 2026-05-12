@@ -1,8 +1,8 @@
-import 'dart:convert';
 import 'package:LiveScore/services/HttpService.dart';
 import 'package:flutter/material.dart';
 import 'TeamSelectionScreen.dart';
 import 'package:LiveScore/constants.dart';
+import 'package:LiveScore/Widgets/LoadingView.dart';
 
 class LeagueSelectionScreen extends StatefulWidget {
   @override
@@ -11,6 +11,8 @@ class LeagueSelectionScreen extends StatefulWidget {
 
 class _LeagueSelectionScreenState extends State<LeagueSelectionScreen> {
   List _leagues = [];
+  bool _isLoading = true;
+  String? _errorMessage;
   final HttpService _httpService = HttpService();
 
   @override
@@ -24,9 +26,13 @@ class _LeagueSelectionScreenState extends State<LeagueSelectionScreen> {
       final leagues = await _httpService.fetchLeagues();
       setState(() {
         _leagues = leagues;
+        _isLoading = false;
       });
     } catch (e) {
-      print('Error fetching leagues: $e');
+      setState(() {
+        _errorMessage = 'Could not load leagues.';
+        _isLoading = false;
+      });
     }
   }
 
@@ -39,34 +45,52 @@ class _LeagueSelectionScreenState extends State<LeagueSelectionScreen> {
       ),
       body: Container(
         color: AppColors.backgroundColor,
-        child: _leagues.isEmpty
-            ? Center(child: CircularProgressIndicator())
-            : ListView.builder(
-                itemCount: _leagues.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(
-                      _leagues[index]['name'],
-                      style: TextStyle(color: AppColors.textColor),
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TeamSelectionScreen(
-                            leagueCode: _leagues[index]['code'],
-                            leagueName: _leagues[index]['name'],
-                          ),
-                        ),
-                      ).then((selectedTeam) {
-                        if (selectedTeam != null) {
-                          Navigator.pop(context, selectedTeam);
-                        }
-                      });
-                    },
-                  );
-                },
-              ),
+        child: _isLoading
+            ? LoadingView(message: 'Loading leagues...')
+            : _errorMessage != null
+                ? _buildMessage(_errorMessage!, AppColors.errorColor)
+                : _leagues.isEmpty
+                    ? _buildMessage(
+                        'No leagues available.', AppColors.textColor)
+                    : ListView.builder(
+                        itemCount: _leagues.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(
+                              _leagues[index]['name'],
+                              style: TextStyle(color: AppColors.textColor),
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => TeamSelectionScreen(
+                                    leagueCode: _leagues[index]['code'],
+                                    leagueName: _leagues[index]['name'],
+                                  ),
+                                ),
+                              ).then((selectedTeam) {
+                                if (selectedTeam != null) {
+                                  Navigator.pop(context, selectedTeam);
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+      ),
+    );
+  }
+
+  Widget _buildMessage(String message, Color color) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text(
+          message,
+          style: TextStyle(color: color, fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }

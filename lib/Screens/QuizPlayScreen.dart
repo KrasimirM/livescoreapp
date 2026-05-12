@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants.dart';
+import '../Models/QuizCategory.dart';
 import '../services/FirestoreService.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -52,6 +53,7 @@ class _QuizPlayScreenState extends State<QuizPlayScreen> {
       widget.quizId,
       _score,
       widget.quizData['questions'].length,
+      category: widget.quizData['category'] ?? QuizCategory.history,
     );
 
     showDialog(

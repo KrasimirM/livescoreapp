@@ -1,7 +1,9 @@
+import 'package:LiveScore/Screens/LoginScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/FirestoreService.dart';
 import '../Widgets/ProfileScreenTile.dart';
+import '../Widgets/LoadingView.dart';
 import 'LeagueSelectionScreen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -12,6 +14,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String? favoriteTeamName;
   String? userEmail;
+  bool _isLoading = true;
   final FirestoreService _firestoreService = FirestoreService();
 
   @override
@@ -28,8 +31,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
       Map<String, dynamic> userData =
           await _firestoreService.getUserData(user.uid);
+      final teamName = (userData['favorite_team'] ?? '').toString().trim();
       setState(() {
-        favoriteTeamName = userData['favorite_team'];
+        favoriteTeamName = teamName.isEmpty ? null : teamName;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
       });
     }
   }
@@ -43,40 +52,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.transparent,
       ),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(height: 20),
-              if (userEmail != null)
-                ProfileScreenTile(name: 'Email', label: userEmail ?? ''),
-              SizedBox(height: 20),
-              if (favoriteTeamName != null)
-                ProfileScreenTile(
-                    name: 'Favorite Team',
-                    label: favoriteTeamName ?? 'No favorite team selected'),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  _changeFavoriteTeam(context);
-                },
-                child: Text('Change Favorite Team'),
-              ),
-              SizedBox(height: 20),
-              TextButton(
-                onPressed: () {
-                  _signOut(context);
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: _isLoading
+            ? LoadingView(message: 'Loading profile...')
+            : Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 20),
+                    if (userEmail != null)
+                      ProfileScreenTile(name: 'Email', label: userEmail ?? ''),
+                    SizedBox(height: 20),
+                    ProfileScreenTile(
+                      name: 'Favorite Team',
+                      label: favoriteTeamName ?? 'No favorite team selected',
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        _changeFavoriteTeam(context);
+                      },
+                      child: Text('Change Favorite Team'),
+                    ),
+                    SizedBox(height: 20),
+                    TextButton(
+                      onPressed: () {
+                        _signOut(context);
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      ),
+                      child: Text('Logout'),
+                    ),
+                  ],
                 ),
-                child: Text('Logout'),
               ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -84,7 +96,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _signOut(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
-      Navigator.pushReplacementNamed(context, '/login');
+      // Navigate directly to login screen and remove all previous routes
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => LoginScreen()),
+        (route) => false,
+      );
     } catch (e) {
       print('Error signing out: $e');
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../Models/QuizCategory.dart';
 import '../constants.dart';
 import 'package:intl/intl.dart';
 
@@ -20,6 +21,8 @@ class QuizCardWidget extends StatelessWidget {
     String scoreText = '';
     String tag = '';
     String dateText = '';
+    final quizData = quiz.data() as Map<String, dynamic>;
+    final category = quizData['category'] ?? QuizCategory.history;
 
     if (answered && result != null) {
       int score = result!['score'] ?? 0;
@@ -72,6 +75,22 @@ class QuizCardWidget extends StatelessWidget {
                   color: answered ? Colors.white70 : Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  QuizCategory.label(category),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               SizedBox(height: 12),

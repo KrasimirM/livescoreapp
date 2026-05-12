@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../Widgets/CustomTextField.dart';
+import '../Widgets/LoadingView.dart';
 import '../constants.dart';
-import 'HomeScreen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   @override
@@ -21,8 +21,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool _showPassword = false;
   bool _showConfirmPassword = false;
   bool _submitted = false;
+  bool _isRegistering = false;
 
   void _register() async {
+    if (_isRegistering) return;
+
     setState(() => _submitted = true);
     final error = _validateForm();
     if (error.isNotEmpty) {
@@ -31,6 +34,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
 
     try {
+      setState(() {
+        _isRegistering = true;
+        _generalError = '';
+      });
+
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
@@ -41,16 +49,31 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         final usersRef = FirebaseFirestore.instance.collection('users');
         final doc = await usersRef.doc(user.uid).get();
         if (!doc.exists) {
-          await usersRef
-              .doc(user.uid)
-              .set({'email': user.email, 'uid': user.uid});
+          await usersRef.doc(user.uid).set({
+            'email': user.email,
+            'uid': user.uid,
+            'favorite_team': '',
+            'favorite_team_id': '',
+            'is_admin': false,
+          });
         }
       }
-      Navigator.pushReplacementNamed(context, '/home');
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } on FirebaseAuthException catch (e) {
-      setState(() => _generalError = e.message ?? 'Registration error');
+      if (mounted) {
+        setState(() {
+          _generalError = e.message ?? 'Registration error';
+          _isRegistering = false;
+        });
+      }
     } catch (e) {
-      setState(() => _generalError = 'Error: $e');
+      if (mounted) {
+        setState(() {
+          _generalError = 'Error: $e';
+          _isRegistering = false;
+        });
+      }
     }
   }
 
@@ -72,87 +95,102 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(height: 24),
-                  Text(
-                    'Sign Up',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryColor,
-                    ),
-                  ),
-                  SizedBox(height: 40),
-                  CustomTextField(controller: _emailController, label: 'Email'),
-                  CustomTextField(
-                    controller: _passwordController,
-                    label: 'Password',
-                    obscureText: !_showPassword,
-                    toggleVisibility: () =>
-                        setState(() => _showPassword = !_showPassword),
-                    showToggle: true,
-                  ),
-                  CustomTextField(
-                    controller: _confirmPasswordController,
-                    label: 'Confirm Password',
-                    obscureText: !_showConfirmPassword,
-                    toggleVisibility: () => setState(
-                        () => _showConfirmPassword = !_showConfirmPassword),
-                    showToggle: true,
-                  ),
-                  if (_submitted && _generalError.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12.0),
-                      child: Text(
-                        _generalError,
-                        style: TextStyle(
-                            color: AppColors.errorColor, fontSize: 14),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _register,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryColor,
-                      minimumSize: Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
-                    ),
-                    child: Text('Sign Up',
-                        style: TextStyle(
-                            fontSize: 18,
+      body: Stack(
+        children: [
+          AbsorbPointer(
+            absorbing: _isRegistering,
+            child: GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0, vertical: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(height: 24),
+                        Text(
+                          'Sign Up',
+                          style: TextStyle(
+                            fontSize: 32,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white)),
+                            color: AppColors.primaryColor,
+                          ),
+                        ),
+                        SizedBox(height: 40),
+                        CustomTextField(
+                            controller: _emailController, label: 'Email'),
+                        CustomTextField(
+                          controller: _passwordController,
+                          label: 'Password',
+                          obscureText: !_showPassword,
+                          toggleVisibility: () =>
+                              setState(() => _showPassword = !_showPassword),
+                          showToggle: true,
+                        ),
+                        CustomTextField(
+                          controller: _confirmPasswordController,
+                          label: 'Confirm Password',
+                          obscureText: !_showConfirmPassword,
+                          toggleVisibility: () => setState(() =>
+                              _showConfirmPassword = !_showConfirmPassword),
+                          showToggle: true,
+                        ),
+                        if (_submitted && _generalError.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12.0),
+                            child: Text(
+                              _generalError,
+                              style: TextStyle(
+                                  color: AppColors.errorColor, fontSize: 14),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: _isRegistering ? null : _register,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryColor,
+                            minimumSize: Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30)),
+                          ),
+                          child: Text('Sign Up',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white)),
+                        ),
+                        SizedBox(height: 40),
+                        Image.asset(
+                          'assets/logo.png',
+                          width: 150,
+                          height: 150,
+                          color: Colors.white,
+                        ),
+                        SizedBox(height: 20),
+                        TextButton(
+                          onPressed: _isRegistering
+                              ? null
+                              : () => Navigator.pop(context),
+                          child: Text('Already have an account? Sign In',
+                              style: TextStyle(
+                                  color: AppColors.accentColor, fontSize: 16)),
+                        ),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 40),
-                  Image.asset(
-                    'assets/logo.png',
-                    width: 150,
-                    height: 150,
-                    color: Colors.white,
-                  ),
-                  SizedBox(height: 20),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('Already have an account? Sign In',
-                        style: TextStyle(
-                            color: AppColors.accentColor, fontSize: 16)),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+          if (_isRegistering)
+            Container(
+              color: AppColors.backgroundColor.withAlpha(219),
+              child: LoadingView(message: 'Creating your account...'),
+            ),
+        ],
       ),
     );
   }

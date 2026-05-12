@@ -1,11 +1,13 @@
 import 'package:LiveScore/Widgets/MatchFilter.dart';
 import 'package:LiveScore/Widgets/MatchTile.dart';
 import 'package:LiveScore/Widgets/TeamInfo.dart';
-import 'package:LiveScore/Widgets/MatchSection.dart';
+import 'package:LiveScore/Widgets/LoadingView.dart';
+import 'package:LiveScore/Widgets/FavoriteTeamInsights.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:LiveScore/services/HttpService.dart';
 import 'package:LiveScore/services/FirestoreService.dart';
+import 'package:LiveScore/constants.dart';
 import 'LeagueSelectionScreen.dart';
 
 class Favouriteteamscreen extends StatefulWidget {
@@ -22,6 +24,9 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
   List _matches = [];
   List _pastMatches = [];
   List _futureMatches = [];
+  bool _isLoadingUser = true;
+  bool _isLoadingMatches = false;
+  String? _errorMessage;
   final FirestoreService _firestoreService = FirestoreService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final HttpService _httpService = HttpService();
@@ -52,7 +57,13 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
         }
       }
     } catch (e) {
-      print('Error loading user data: $e');
+      _errorMessage = 'Could not load your profile.';
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingUser = false;
+        });
+      }
     }
   }
 
@@ -65,9 +76,13 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
         title: Text('Favorite Team'),
       ),
       body: Center(
-        child: _favoriteTeamName == null
-            ? _buildNoFavoriteTeam()
-            : _buildFavoriteTeam(),
+        child: _isLoadingUser
+            ? LoadingView(message: 'Loading your favorite team...')
+            : _errorMessage != null
+                ? _buildError(_errorMessage!)
+                : _favoriteTeamName == null
+                    ? _buildNoFavoriteTeam()
+                    : _buildFavoriteTeam(),
       ),
     );
   }
@@ -76,7 +91,10 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('No favourite team selected'),
+        Text(
+          'No favourite team selected',
+          style: TextStyle(color: AppColors.textColor),
+        ),
         SizedBox(height: 20),
         ElevatedButton(
           onPressed: () async {
@@ -111,29 +129,64 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
               )
             : Container(),
         SizedBox(height: 20),
-        _matches.isEmpty
-            ? CircularProgressIndicator()
-            : Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _buildLastPlayedMatch(),
-                      SizedBox(height: 20),
-                      MatchFilter(
-                        selectedFilter: _selectedFilter,
-                        onChanged: (String newValue) {
-                          setState(() {
-                            _selectedFilter = newValue;
-                          });
-                        },
+        _isLoadingMatches
+            ? Expanded(child: LoadingView(message: 'Loading matches...'))
+            : _matches.isEmpty
+                ? Expanded(
+                    child: _buildEmptyState(
+                      'No matches found for this team.',
+                    ),
+                  )
+                : Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          _buildLastPlayedMatch(),
+                          SizedBox(height: 20),
+                          FavoriteTeamInsights(
+                            teamId: _favoriteTeamId!,
+                            pastMatches: _pastMatches,
+                          ),
+                          SizedBox(height: 20),
+                          MatchFilter(
+                            selectedFilter: _selectedFilter,
+                            onChanged: (String newValue) {
+                              setState(() {
+                                _selectedFilter = newValue;
+                              });
+                            },
+                          ),
+                          SizedBox(height: 20),
+                          _buildMatchList(),
+                        ],
                       ),
-                      SizedBox(height: 20),
-                      _buildMatchList(),
-                    ],
+                    ),
                   ),
-                ),
-              ),
       ],
+    );
+  }
+
+  Widget _buildError(String message) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Text(
+        message,
+        style: TextStyle(color: AppColors.errorColor, fontSize: 16),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text(
+          message,
+          style: TextStyle(color: AppColors.textColor, fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+      ),
     );
   }
 
@@ -180,6 +233,11 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
   }
 
   Future<void> getMatches() async {
+    setState(() {
+      _isLoadingMatches = true;
+      _errorMessage = null;
+    });
+
     try {
       final now = DateTime.now();
       final oneYearAgo =
@@ -201,9 +259,15 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
         _pastMatches = pastMatches;
         _futureMatches = futureMatches;
         _matches = _futureMatches;
+        _isLoadingMatches = false;
       });
     } catch (e) {
-      print('Error fetching matches: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingMatches = false;
+          _errorMessage = 'Could not load matches.';
+        });
+      }
     }
   }
 

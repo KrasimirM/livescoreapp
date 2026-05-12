@@ -38,6 +38,31 @@ target 'Runner' do
 end
 
 post_install do |installer|
+  ['gRPC-Core', 'gRPC-C++'].each do |grpc_pod|
+    grpc_basic_seq = File.join(
+      __dir__,
+      'Pods',
+      grpc_pod,
+      'src',
+      'core',
+      'lib',
+      'promise',
+      'detail',
+      'basic_seq.h'
+    )
+    if File.exist?(grpc_basic_seq)
+      text = File.read(grpc_basic_seq)
+      patched = text.gsub(
+        'Traits::template CallSeqFactory(f_, *cur_, std::move(arg))',
+        'Traits::CallSeqFactory(f_, *cur_, std::move(arg))'
+      )
+      if patched != text
+        File.chmod(0644, grpc_basic_seq)
+        File.write(grpc_basic_seq, patched)
+      end
+    end
+  end
+
   installer.pods_project.targets.each do |target|
     # Fix for BoringSSL-GRPC - remove problematic compiler flags
     if target.name == 'BoringSSL-GRPC'
@@ -52,9 +77,6 @@ post_install do |installer|
 
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
-
-      # Exclude arm64 only for simulator on Apple Silicon
-      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
     end
 
     flutter_additional_ios_build_settings(target)

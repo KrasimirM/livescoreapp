@@ -77,79 +77,107 @@ class HttpService {
     final matchAwayId = match['awayTeam']['id'];
 
     List matches = data['matches'] ?? [];
-    int homeWins = 0, awayWins = 0, draws = 0;
-    double homeGoals = 0, awayGoals = 0;
+    final relatedMatches = matches
+        .where((m) =>
+            (m['homeTeam']['id'] == matchHomeId &&
+                m['awayTeam']['id'] == matchAwayId) ||
+            (m['homeTeam']['id'] == matchAwayId &&
+                m['awayTeam']['id'] == matchHomeId))
+        .toList();
+
+    // Base priors prevent impossible-looking 0% predictions when historical
+    // head-to-head data is sparse or one outcome has not happened recently.
+    double homeScore = 1.35;
+    double drawScore = 1.0;
+    double awayScore = 1.0;
 
     // Iterate through all previous encounters
-    for (int i = 0; i < matches.length; i++) {
-      var m = matches[i];
+    for (int i = 0; i < relatedMatches.length; i++) {
+      var m = relatedMatches[i];
       var hId = m['homeTeam']['id'];
       var aId = m['awayTeam']['id'];
-
-      // Skip unrelated matches
-      if ((hId != matchHomeId && hId != matchAwayId) ||
-          (aId != matchHomeId && aId != matchAwayId)) continue;
 
       int hScore = m['score']['fullTime']['home'] ?? 0;
       int aScore = m['score']['fullTime']['away'] ?? 0;
 
       // Apply recent form weighting: last 5 matches = 1.5x weight
-      double weight = (i >= matches.length - 5) ? 1.5 : 1.0;
+      double weight = (i >= relatedMatches.length - 5) ? 1.5 : 1.0;
 
-      // Accumulate goals (could be used for tie-breakers or advanced algo)
-      homeGoals += hScore * weight;
-      awayGoals += aScore * weight;
+      final homeTeamGoals = hId == matchHomeId ? hScore : aScore;
+      final awayTeamGoals = aId == matchAwayId ? aScore : hScore;
+      final goalDifference = homeTeamGoals - awayTeamGoals;
 
       // Determine winner and accumulate wins/losses with weight
       if (hScore > aScore) {
         if (hId == matchHomeId)
-          homeWins += (1 * weight).round();
+          homeScore += 2.0 * weight;
         else
-          awayWins += (1 * weight).round();
+          awayScore += 2.0 * weight;
       } else if (hScore < aScore) {
         if (aId == matchAwayId)
-          awayWins += (1 * weight).round();
+          awayScore += 2.0 * weight;
         else
-          homeWins += (1 * weight).round();
+          homeScore += 2.0 * weight;
       } else {
-        draws += (1 * weight).round();
+        drawScore += 2.0 * weight;
+      }
+
+      if (goalDifference > 0) {
+        homeScore += goalDifference.clamp(0, 3) * 0.25 * weight;
+      } else if (goalDifference < 0) {
+        awayScore += (-goalDifference).clamp(0, 3) * 0.25 * weight;
+      } else {
+        drawScore += 0.25 * weight;
       }
     }
 
-    // Add simple home advantage boost
-    homeWins += 1;
-
-    int total = homeWins + draws + awayWins;
-    if (total == 0) total = 1; // Avoid division by zero
+    final totalScore = homeScore + drawScore + awayScore;
 
     // Normalize so that sum = 100%
-    double homeChance = (homeWins / total) * 100;
-    double drawChance = (draws / total) * 100;
-    double awayChance = (awayWins / total) * 100;
-
-    // Adjust slightly to ensure rounding doesn't exceed 100%
-    double totalChance = homeChance + drawChance + awayChance;
-    homeChance = homeChance / totalChance * 100;
-    drawChance = drawChance / totalChance * 100;
-    awayChance = awayChance / totalChance * 100;
+    double homeChance = (homeScore / totalScore) * 100;
+    double drawChance = (drawScore / totalScore) * 100;
+    double awayChance = (awayScore / totalScore) * 100;
+    final normalizedChances = _applyMinimumChance([
+      homeChance,
+      drawChance,
+      awayChance,
+    ]);
 
     return {
       'homeTeam': {
         'name': match['homeTeam']['name'],
-        'chance': homeChance.toStringAsFixed(1),
+        'chance': normalizedChances[0].toStringAsFixed(1),
       },
-      'draw': drawChance.toStringAsFixed(1),
+      'draw': normalizedChances[1].toStringAsFixed(1),
       'awayTeam': {
         'name': match['awayTeam']['name'],
-        'chance': awayChance.toStringAsFixed(1),
+        'chance': normalizedChances[2].toStringAsFixed(1),
       },
-      'matches': matches
-          .where((m) =>
-              (m['homeTeam']['id'] == matchHomeId &&
-                  m['awayTeam']['id'] == matchAwayId) ||
-              (m['homeTeam']['id'] == matchAwayId &&
-                  m['awayTeam']['id'] == matchHomeId))
-          .toList(),
+      'matches': relatedMatches,
     };
+  }
+
+  List<double> _applyMinimumChance(List<double> chances) {
+    const double minimumChance = 5.0;
+    final adjusted = chances
+        .map((chance) => chance < minimumChance ? minimumChance : chance)
+        .toList();
+
+    final total = adjusted.reduce((sum, chance) => sum + chance);
+    final excess = total - 100.0;
+    if (excess <= 0) return adjusted;
+
+    final reducible = adjusted
+        .map((chance) => chance > minimumChance ? chance - minimumChance : 0.0)
+        .toList();
+    final totalReducible = reducible.reduce((sum, value) => sum + value);
+    if (totalReducible <= 0) return adjusted;
+
+    for (int i = 0; i < adjusted.length; i++) {
+      if (reducible[i] == 0) continue;
+      adjusted[i] -= excess * (reducible[i] / totalReducible);
+    }
+
+    return adjusted;
   }
 }

@@ -1,7 +1,7 @@
-import 'dart:convert';
 import 'package:LiveScore/services/HttpService.dart';
 import 'package:flutter/material.dart';
 import 'package:LiveScore/constants.dart';
+import 'package:LiveScore/Widgets/LoadingView.dart';
 
 class TableScreen extends StatefulWidget {
   final String code;
@@ -14,6 +14,8 @@ class TableScreen extends StatefulWidget {
 
 class _TableScreenState extends State<TableScreen> {
   List _table = [];
+  bool _isLoading = true;
+  String? _errorMessage;
   final HttpService _httpService = HttpService();
 
   @override
@@ -30,112 +32,113 @@ class _TableScreenState extends State<TableScreen> {
         automaticallyImplyLeading: true,
         backgroundColor: AppColors.primaryColor,
       ),
-      body: _table.isEmpty
+      body: _isLoading
           ? Container(
               color: AppColors.backgroundColor,
-              child: Center(
-                child: CircularProgressIndicator(
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppColors.accentColor),
-                ),
-              ),
+              child: LoadingView(message: 'Loading table...'),
             )
-          : Container(
-              color: AppColors.backgroundColor,
-              child: ListView(
-                physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics()),
-                children: [
-                  SizedBox(
-                    height: 20,
-                  ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Text(
-                                'Pos',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textColor,
-                                ),
-                              ),
-                              SizedBox(
-                                width: 20,
-                              ),
-                              Text(
-                                'Club',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textColor,
-                                ),
-                              ),
-                            ],
+          : _errorMessage != null
+              ? _buildMessage(_errorMessage!, AppColors.errorColor)
+              : _table.isEmpty
+                  ? _buildMessage(
+                      'No table data available.', AppColors.textColor)
+                  : Container(
+                      color: AppColors.backgroundColor,
+                      child: ListView(
+                        physics: const BouncingScrollPhysics(
+                            parent: AlwaysScrollableScrollPhysics()),
+                        children: [
+                          SizedBox(
+                            height: 20,
                           ),
-                        ),
-                        Expanded(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'PL',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textColor,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        'Pos',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textColor,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 20,
+                                      ),
+                                      Text(
+                                        'Club',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                'W',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textColor,
+                                Expanded(
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'PL',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textColor,
+                                        ),
+                                      ),
+                                      Text(
+                                        'W',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textColor,
+                                        ),
+                                      ),
+                                      Text(
+                                        'D',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textColor,
+                                        ),
+                                      ),
+                                      Text(
+                                        'L',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textColor,
+                                        ),
+                                      ),
+                                      Text(
+                                        'GD',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textColor,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Pts',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                'D',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textColor,
-                                ),
-                              ),
-                              Text(
-                                'L',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textColor,
-                                ),
-                              ),
-                              Text(
-                                'GD',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textColor,
-                                ),
-                              ),
-                              Text(
-                                'Pts',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textColor,
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                          SizedBox(
+                            height: 10,
+                          ),
+                          buildTable(),
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  buildTable(),
-                ],
-              ),
-            ),
     );
   }
 
@@ -144,10 +147,30 @@ class _TableScreenState extends State<TableScreen> {
       final table = await _httpService.fetchTable(widget.code);
       setState(() {
         _table = table;
+        _isLoading = false;
       });
     } catch (e) {
-      print('Error fetching table: $e');
+      setState(() {
+        _errorMessage = 'Could not load table.';
+        _isLoading = false;
+      });
     }
+  }
+
+  Widget _buildMessage(String message, Color color) {
+    return Container(
+      color: AppColors.backgroundColor,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            message,
+            style: TextStyle(color: color, fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget buildTable() {

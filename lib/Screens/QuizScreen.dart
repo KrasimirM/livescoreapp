@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
+import '../Widgets/QuizListTab.dart';
+import '../Widgets/QuizRankingTab.dart';
 import '../constants.dart';
 import '../services/FirestoreService.dart';
-import '../Screens/QuizPlayScreen.dart';
-import '../Widgets/QuizCard.dart';
 
 class QuizScreen extends StatefulWidget {
   @override
@@ -17,93 +16,68 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.primaryColor, AppColors.accentColor],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primaryColor, AppColors.accentColor],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              SizedBox(height: 20),
-              Text(
-                'Quizzes',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          child: SafeArea(
+            child: Column(
+              children: [
+                SizedBox(height: 20),
+                Text(
+                  'Quizzes',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              SizedBox(height: 16),
-              Expanded(
-                child: FutureBuilder<List>(
-                  future: _firestoreService.fetchQuizzes(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.primaryColor,
-                        ),
-                      );
-                    }
-
-                    final quizzes = snapshot.data!;
-                    if (quizzes.isEmpty) {
-                      return Center(
-                        child: Text(
-                          'No quizzes available',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
-                        ),
-                      );
-                    }
-
-                    return ListView.builder(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: quizzes.length,
-                      itemBuilder: (context, index) {
-                        final quiz = quizzes[index];
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12.0), // Added vertical padding
-                          child: FutureBuilder<Map<String, dynamic>?>(
-                            future: _firestoreService.getQuizResultForUser(
-                                _userId, quiz.id),
-                            builder: (context, resultSnapshot) {
-                              final result = resultSnapshot.data;
-                              bool answered = result != null;
-
-                              return QuizCardWidget(
-                                quiz: quiz,
-                                answered: answered,
-                                result: result,
-                                onTap: answered
-                                    ? null
-                                    : () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => QuizPlayScreen(
-                                              quizId: quiz.id,
-                                              quizData: quiz.data(),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    );
-                  },
+                SizedBox(height: 12),
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackgroundColor.withAlpha(180),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TabBar(
+                    dividerColor: Colors.transparent,
+                    indicator: BoxDecoration(
+                      color: AppColors.primaryColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: AppColors.subtitleTextColor,
+                    tabs: [
+                      Tab(text: 'Quizzes'),
+                      Tab(text: 'Ranking'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(height: 12),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      QuizListTab(
+                        firestoreService: _firestoreService,
+                        userId: _userId,
+                      ),
+                      QuizRankingTab(
+                        firestoreService: _firestoreService,
+                        userId: _userId,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
