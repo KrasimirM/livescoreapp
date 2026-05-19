@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:LiveScore/Widgets/CrestImage.dart';
 
 class TeamInfo extends StatelessWidget {
   final String teamName;
@@ -13,8 +14,8 @@ class TeamInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Image.network(
-          crestUrl,
+        CrestImage(
+          crestUrl: crestUrl,
           width: 100,
           height: 100,
         ),

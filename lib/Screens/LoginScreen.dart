@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../Widgets/CustomTextField.dart';
 import '../Widgets/LoadingView.dart';
 import '../constants.dart';
@@ -44,12 +45,34 @@ class _LoginScreenState extends State<LoginScreen> {
         _errorMessage = '';
       });
 
-      await _auth.signInWithEmailAndPassword(
+      final credential = await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
       if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+
+      final user = credential.user;
+      if (user == null) {
+        setState(() {
+          _errorMessage = 'Could not load user profile.';
+          _isLoggingIn = false;
+        });
+        return;
+      }
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (!mounted) return;
+
+      final userData = userDoc.data();
+      final isAdmin = userData?['is_admin'] == true;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        isAdmin ? '/admin' : '/home',
+        (route) => false,
+      );
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         setState(() {

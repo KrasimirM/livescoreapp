@@ -33,7 +33,7 @@ class _QuizListTabState extends State<QuizListTab> {
             setState(() => _selectedCategory = category);
           },
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 12),
         Expanded(
           child: FutureBuilder<List>(
             future: widget.firestoreService.fetchQuizzes(
@@ -46,22 +46,17 @@ class _QuizListTabState extends State<QuizListTab> {
 
               final quizzes = snapshot.data!;
               if (quizzes.isEmpty) {
-                return Center(
-                  child: Text(
-                    'No quizzes in this category',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                );
+                return const _QuizEmptyState();
               }
 
               return ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
                 itemCount: quizzes.length,
                 itemBuilder: (context, index) {
                   final quiz = quizzes[index];
 
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    padding: const EdgeInsets.only(bottom: 12),
                     child: FutureBuilder<Map<String, dynamic>?>(
                       future: widget.firestoreService.getQuizResultForUser(
                         widget.userId,
@@ -98,6 +93,44 @@ class _QuizListTabState extends State<QuizListTab> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _QuizEmptyState extends StatelessWidget {
+  const _QuizEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF151B23).withAlpha(230),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withAlpha(16)),
+        ),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.quiz_outlined,
+              color: Color(0xFFFFB02E),
+              size: 36,
+            ),
+            SizedBox(height: 10),
+            Text(
+              'No quizzes in this category',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

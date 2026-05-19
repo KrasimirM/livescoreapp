@@ -20,26 +20,51 @@ class QuizCategoryFilter extends StatelessWidget {
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 18),
       child: Row(
         children: categories.map((category) {
           final selected = selectedCategory == category;
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(QuizCategory.label(category)),
-              selected: selected,
-              onSelected: (_) => onChanged(category),
-              selectedColor: AppColors.primaryColor,
-              backgroundColor: AppColors.cardBackgroundColor,
-              labelStyle: TextStyle(
-                color: selected ? Colors.white : AppColors.subtitleTextColor,
-                fontWeight: FontWeight.bold,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(
-                  color: selected ? AppColors.primaryColor : Colors.transparent,
+            padding: const EdgeInsets.only(right: 10),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: () => onChanged(category),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? AppColors.primaryColor.withAlpha(45)
+                      : AppColors.surfaceColor.withAlpha(225),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: selected
+                        ? AppColors.primaryColor
+                        : Colors.white.withAlpha(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _iconForCategory(category),
+                      size: 17,
+                      color: selected
+                          ? AppColors.primaryColor
+                          : AppColors.mutedTextColor,
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      QuizCategory.label(category),
+                      style: TextStyle(
+                        color: selected
+                            ? AppColors.textColor
+                            : AppColors.subtitleTextColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -47,5 +72,18 @@ class QuizCategoryFilter extends StatelessWidget {
         }).toList(),
       ),
     );
+  }
+
+  IconData _iconForCategory(String category) {
+    switch (category) {
+      case QuizCategory.history:
+        return Icons.history_edu;
+      case QuizCategory.teams:
+        return Icons.shield;
+      case QuizCategory.players:
+        return Icons.sports_soccer;
+      default:
+        return Icons.grid_view;
+    }
   }
 }

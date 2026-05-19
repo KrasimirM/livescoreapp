@@ -12,13 +12,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-
-  List<Widget> _screens = [
-    CompetitionsScreen(),
-    Favouriteteamscreen(),
-    QuizScreen(),
-    ProfileScreen(),
-  ];
+  int _teamRefreshToken = 0;
 
   void _onItemTapped(int index) {
     setState(() {
@@ -26,48 +20,95 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _refreshFavoriteTeam() {
+    setState(() {
+      _teamRefreshToken++;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      CompetitionsScreen(),
+      Favouriteteamscreen(
+        refreshToken: _teamRefreshToken,
+        onFavoriteTeamChanged: _refreshFavoriteTeam,
+      ),
+      QuizScreen(),
+      ProfileScreen(
+        refreshToken: _teamRefreshToken,
+        onNavigate: _onItemTapped,
+        onFavoriteTeamChanged: _refreshFavoriteTeam,
+      ),
+    ];
+
     return Scaffold(
+      extendBody: true,
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: RadialGradient(
             colors: [
-              AppColors.primaryColor,
-              AppColors.accentColor,
+              AppColors.primaryColor.withAlpha(70),
+              AppColors.backgroundColor,
+              Color(0xFF090C10),
             ],
-            begin: const FractionalOffset(0.0, 0.0),
-            end: const FractionalOffset(0.0, 1.0),
-            stops: [0.0, 1.0],
-            tileMode: TileMode.clamp,
+            center: Alignment.topLeft,
+            radius: 1.25,
+            stops: [0.0, 0.46, 1.0],
           ),
         ),
-        child: _screens[_selectedIndex],
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: screens,
+        ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sports_soccer),
-            label: 'Competitions',
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceColor.withAlpha(242),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withAlpha(18)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(90),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favourite Teams',
+          child: NavigationBar(
+            height: 66,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            indicatorColor: AppColors.primaryColor.withAlpha(45),
+            selectedIndex: _selectedIndex,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            onDestinationSelected: _onItemTapped,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.emoji_events_outlined),
+                selectedIcon: Icon(Icons.emoji_events),
+                label: 'Leagues',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.star_border),
+                selectedIcon: Icon(Icons.star),
+                label: 'Team',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.psychology_alt_outlined),
+                selectedIcon: Icon(Icons.psychology_alt),
+                label: 'Quiz',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                selectedIcon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.quiz),
-            label: 'Quiz',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.accentColor,
-        unselectedItemColor: AppColors.subtitleTextColor,
-        onTap: _onItemTapped,
-        backgroundColor: AppColors.backgroundColor,
+        ),
       ),
     );
   }

@@ -46,3 +46,5 @@ app.*.map.json
 # Local Node tooling and Firebase Admin credentials
 node_modules/
 serviceAccountKey.json
+.env
+lib/firebase_options.dart

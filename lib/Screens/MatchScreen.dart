@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:LiveScore/services/HttpService.dart';
 import 'package:LiveScore/constants.dart';
+import 'package:LiveScore/Widgets/CrestImage.dart';
 import 'package:intl/intl.dart';
 
 class MatchScreen extends StatefulWidget {
@@ -122,8 +123,8 @@ class _TeamBadge extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.network(
-            team['crest'],
+          CrestImage(
+            crestUrl: team['crest'],
             width: 60,
             height: 60,
           ),

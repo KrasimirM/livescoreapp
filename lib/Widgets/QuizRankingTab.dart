@@ -32,7 +32,7 @@ class _QuizRankingTabState extends State<QuizRankingTab> {
             setState(() => _selectedCategory = category);
           },
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 12),
         Expanded(
           child: FutureBuilder<List<dynamic>>(
             future: Future.wait([
@@ -54,12 +54,12 @@ class _QuizRankingTabState extends State<QuizRankingTab> {
                   snapshot.data![1] as List<Map<String, dynamic>>;
 
               return ListView(
-                padding: EdgeInsets.fromLTRB(16, 0, 16, 20),
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
                 children: [
                   _StatsCard(stats: userStats),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 18),
                   _LeaderboardHeader(category: _selectedCategory),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   if (leaderboard.isEmpty)
                     _EmptyRankingCard()
                   else
@@ -97,15 +97,16 @@ class _StatsCard extends StatelessWidget {
     final achievements = (stats['achievements'] as List).cast<String>();
 
     return Container(
-      padding: EdgeInsets.all(18),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.cardBackgroundColor,
+        color: AppColors.cardBackgroundColor.withAlpha(235),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withAlpha(18)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black38,
-            blurRadius: 8,
-            offset: Offset(0, 4),
+            color: Colors.black.withAlpha(55),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -114,21 +115,32 @@ class _StatsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.workspace_premium, color: AppColors.accentColor),
-              SizedBox(width: 8),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.accentColor.withAlpha(35),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.workspace_premium,
+                  color: AppColors.accentColor,
+                ),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Your Quiz Profile',
-                  style: TextStyle(
-                    color: AppColors.primaryColor,
+                  style: const TextStyle(
+                    color: AppColors.textColor,
                     fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 14),
+          const SizedBox(height: 14),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -143,8 +155,8 @@ class _StatsCard extends StatelessWidget {
               _StatPill(label: 'Badge', value: badge, wide: true),
             ],
           ),
-          SizedBox(height: 16),
-          Text(
+          const SizedBox(height: 16),
+          const Text(
             'Achievements',
             style: TextStyle(
               color: AppColors.subtitleTextColor,
@@ -152,11 +164,11 @@ class _StatsCard extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           if (achievements.isEmpty)
             Text(
               'Complete a quiz to unlock your first achievement.',
-              style: TextStyle(color: AppColors.subtitleTextColor),
+              style: const TextStyle(color: AppColors.subtitleTextColor),
             )
           else
             Wrap(
@@ -180,20 +192,21 @@ class _AchievementChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.primaryColor.withAlpha(55),
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.primaryColor.withAlpha(35),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.primaryColor.withAlpha(140)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.emoji_events, color: AppColors.accentColor, size: 16),
-          SizedBox(width: 6),
+          const Icon(Icons.emoji_events,
+              color: AppColors.accentColor, size: 16),
+          const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
               fontSize: 13,
@@ -220,10 +233,11 @@ class _StatPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: wide ? 300 : 145,
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white10,
-        borderRadius: BorderRadius.circular(10),
+        color: AppColors.surfaceColor.withAlpha(210),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withAlpha(14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,11 +246,11 @@ class _StatPill extends StatelessWidget {
             label,
             style: TextStyle(color: AppColors.subtitleTextColor, fontSize: 13),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(
-              color: Colors.white,
+            style: const TextStyle(
+              color: AppColors.textColor,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -260,14 +274,14 @@ class _LeaderboardHeader extends StatelessWidget {
         Expanded(
           child: Text(
             '${QuizCategory.label(category)} Leaderboard',
-            style: TextStyle(
-              color: Colors.white,
+            style: const TextStyle(
+              color: AppColors.textColor,
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        Icon(Icons.leaderboard, color: AppColors.accentColor),
+        const Icon(Icons.leaderboard, color: AppColors.accentColor),
       ],
     );
   }
@@ -294,46 +308,62 @@ class _LeaderboardTile extends StatelessWidget {
     final quizzesAnswered = user['quizzesAnswered'] as int;
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 6),
-      padding: EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isCurrentUser
             ? AppColors.primaryColor.withAlpha(70)
-            : AppColors.cardBackgroundColor,
+            : AppColors.cardBackgroundColor.withAlpha(225),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isCurrentUser ? AppColors.primaryColor : Colors.transparent,
+          color: isCurrentUser
+              ? AppColors.primaryColor
+              : Colors.white.withAlpha(14),
         ),
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor:
-                rank <= 3 ? AppColors.accentColor : AppColors.primaryColor,
+          Container(
+            width: 42,
+            height: 42,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: rank <= 3
+                  ? AppColors.accentColor.withAlpha(45)
+                  : AppColors.primaryColor.withAlpha(35),
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(
+                color:
+                    rank <= 3 ? AppColors.accentColor : AppColors.primaryColor,
+              ),
+            ),
             child: Text(
-              '$rank',
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              '#$rank',
+              style: TextStyle(
+                color:
+                    rank <= 3 ? AppColors.accentColor : AppColors.primaryColor,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   email.isEmpty ? 'Unknown user' : email,
-                  style: TextStyle(
-                    color: Colors.white,
+                  style: const TextStyle(
+                    color: AppColors.textColor,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   '$badge • $quizzesAnswered quizzes • Avg ${averagePercent.toStringAsFixed(1)}%',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.subtitleTextColor,
                     fontSize: 13,
                   ),
@@ -341,10 +371,10 @@ class _LeaderboardTile extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           Text(
             '$totalScore/$totalQuestions',
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.accentColor,
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -360,12 +390,13 @@ class _EmptyRankingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(18),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.cardBackgroundColor,
+        color: AppColors.cardBackgroundColor.withAlpha(230),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withAlpha(16)),
       ),
-      child: Text(
+      child: const Text(
         'No quiz results in this category yet.',
         style: TextStyle(color: AppColors.textColor, fontSize: 16),
         textAlign: TextAlign.center,

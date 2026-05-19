@@ -44,107 +44,182 @@ class QuizCardWidget extends StatelessWidget {
       dateText = DateFormat('dd MMM yyyy – HH:mm').format(answeredAt);
     }
 
+    final questions = (quizData['questions'] as List?)?.length ?? 0;
+    final cardAccent =
+        answered ? AppColors.mutedTextColor : AppColors.accentColor;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: answered
-                ? [Colors.grey.shade800, Colors.grey.shade900]
-                : [AppColors.primaryColor, AppColors.accentColor],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: AppColors.cardBackgroundColor.withAlpha(235),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: answered
+                ? Colors.white.withAlpha(16)
+                : AppColors.accentColor.withAlpha(95),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black45,
-              blurRadius: 6,
-              offset: Offset(2, 4),
+              color: Colors.black.withAlpha(55),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                quiz['title'],
-                style: TextStyle(
-                  color: answered ? Colors.white70 : Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 8),
-              Container(
-                padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  QuizCategory.label(category),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: cardAccent.withAlpha(35),
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(color: cardAccent.withAlpha(120)),
+                  ),
+                  child: Icon(
+                    answered ? Icons.check_circle : Icons.bolt,
+                    color: cardAccent,
                   ),
                 ),
-              ),
-              SizedBox(height: 12),
-              if (answered) ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Score: $scoreText',
-                      style: TextStyle(
-                          color: AppColors.accentColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    quiz['title'],
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: answered
+                          ? AppColors.subtitleTextColor
+                          : AppColors.textColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
                     ),
-                    Container(
-                      padding:
-                          EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        tag,
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Answered: $dateText',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
                 ),
               ],
-              if (!answered)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _QuizMetaChip(
+                  icon: Icons.category,
+                  label: QuizCategory.label(category),
+                  color: AppColors.primaryColor,
+                ),
+                _QuizMetaChip(
+                  icon: Icons.help_outline,
+                  label: '$questions questions',
+                  color: AppColors.secondaryAccentColor,
+                ),
+                if (answered)
+                  _QuizMetaChip(
+                    icon: Icons.workspace_premium,
+                    label: tag,
+                    color: AppColors.accentColor,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            if (answered) ...[
+              Row(
+                children: [
+                  Expanded(
                     child: Text(
-                      'Play',
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
+                      'Score $scoreText',
+                      style: const TextStyle(
+                        color: AppColors.textColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
+                  Text(
+                    dateText,
+                    style: const TextStyle(
+                      color: AppColors.mutedTextColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ] else
+              Align(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 9, horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Start',
+                        style: TextStyle(
+                          color: AppColors.backgroundColor,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Icon(
+                        Icons.arrow_forward,
+                        color: AppColors.backgroundColor,
+                        size: 17,
+                      ),
+                    ],
+                  ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class _QuizMetaChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _QuizMetaChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withAlpha(28),
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: color.withAlpha(80)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 15),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.subtitleTextColor,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

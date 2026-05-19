@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:LiveScore/constants.dart';
 
 class MatchFilter extends StatelessWidget {
   final String selectedFilter;
@@ -11,45 +12,89 @@ class MatchFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          'Filter Matches:',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceColor.withAlpha(230),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withAlpha(16)),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
           children: [
-            _buildRadioButton('upcoming', 'Upcoming'),
-            _buildRadioButton('past', 'Past'),
+            _buildSegment(
+              value: 'upcoming',
+              label: 'Upcoming',
+              icon: Icons.schedule,
+            ),
+            const SizedBox(width: 6),
+            _buildSegment(
+              value: 'past',
+              label: 'Past',
+              icon: Icons.history,
+            ),
           ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildRadioButton(String value, String label) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Radio<String>(
-            value: value,
-            groupValue: selectedFilter,
-            onChanged: (String? newValue) {
-              onChanged(newValue!);
-            },
-            activeColor: Colors.orange,
+  Widget _buildSegment({
+    required String value,
+    required String label,
+    required IconData icon,
+  }) {
+    final selected = selectedFilter == value;
+
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => onChanged(value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 10),
+          decoration: BoxDecoration(
+            gradient: selected
+                ? const LinearGradient(
+                    colors: [
+                      AppColors.primaryColor,
+                      AppColors.secondaryAccentColor,
+                    ],
+                  )
+                : null,
+            color: selected ? null : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
           ),
-          Text(
-            label,
-            style: TextStyle(color: Colors.white, fontSize: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: selected
+                    ? AppColors.backgroundColor
+                    : AppColors.mutedTextColor,
+              ),
+              const SizedBox(width: 7),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: selected
+                        ? AppColors.backgroundColor
+                        : AppColors.subtitleTextColor,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

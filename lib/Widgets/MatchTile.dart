@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:LiveScore/constants.dart';
 import 'package:LiveScore/Screens/MatchScreen.dart';
 import 'package:LiveScore/Screens/UpcomingMatchScreen.dart';
+import 'package:LiveScore/Widgets/CrestImage.dart';
 
 class MatchTile extends StatelessWidget {
   final Map match;
@@ -13,10 +14,22 @@ class MatchTile extends StatelessWidget {
   Widget build(BuildContext context) {
     bool isUpcoming = match['score']['fullTime']['home'] == null;
 
-    return Card(
-      color: AppColors.cardBackgroundColor,
-      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackgroundColor.withAlpha(235),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withAlpha(15)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(45),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: () {
           if (isUpcoming) {
             Navigator.push(
@@ -42,25 +55,73 @@ class MatchTile extends StatelessWidget {
             children: [
               _TeamBadge(team: match['homeTeam']),
               isUpcoming
-                  ? Text(
-                      'Upcoming',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
-                    )
-                  : Text(
-                      '${match['score']['fullTime']['home']} - ${match['score']['fullTime']['away']}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
+                  ? const _UpcomingActionPill()
+                  : _ScorePill(match: match),
               _TeamBadge(team: match['awayTeam']),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _UpcomingActionPill extends StatelessWidget {
+  const _UpcomingActionPill();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.accentColor, AppColors.primaryColor],
+        ),
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.insights,
+            color: AppColors.backgroundColor,
+            size: 18,
+          ),
+          SizedBox(height: 3),
+          Text(
+            'Preview',
+            style: TextStyle(
+              color: AppColors.backgroundColor,
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScorePill extends StatelessWidget {
+  final Map match;
+
+  const _ScorePill({required this.match});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: AppColors.primaryColor.withAlpha(80)),
+      ),
+      child: Text(
+        '${match['score']['fullTime']['home']} - ${match['score']['fullTime']['away']}',
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
+          color: AppColors.textColor,
         ),
       ),
     );
@@ -77,8 +138,8 @@ class _TeamBadge extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Image.network(
-            team['crest'] ?? '',
+          CrestImage(
+            crestUrl: team['crest'],
             width: 50,
             height: 50,
           ),

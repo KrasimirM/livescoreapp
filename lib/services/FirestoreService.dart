@@ -15,9 +15,17 @@ class FirestoreService {
   }
 
   Future<Map<String, dynamic>> getUserData(String userId) async {
-    final DocumentSnapshot<Map<String, dynamic>> snapshot =
-        await FirebaseFirestore.instance.collection('users').doc(userId).get();
-    return snapshot.exists ? snapshot.data()! : {};
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> snapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .get();
+      return snapshot.exists ? snapshot.data()! : {};
+    } on FirebaseException catch (e) {
+      print('Error loading user data: ${e.code}');
+      return {};
+    }
   }
 
   Future<void> updateFavoriteTeam(
@@ -267,6 +275,131 @@ class FirestoreService {
       inserted++;
     }
     return inserted;
+  }
+
+  Future<Map<String, dynamic>?> getMatchInteraction(
+      String userId, String matchId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('matchInteractions')
+          .doc(matchId)
+          .get();
+      return snapshot.exists ? snapshot.data() : null;
+    } on FirebaseException catch (e) {
+      print('Error loading match interaction: ${e.code}');
+      return null;
+    }
+  }
+
+  Future<void> setMatchReminder({
+    required String userId,
+    required Map match,
+    required bool enabled,
+  }) async {
+    await _setMatchInteractionFlag(
+      userId: userId,
+      match: match,
+      field: 'reminderEnabled',
+      value: enabled,
+    );
+  }
+
+  Future<void> setPinnedMatch({
+    required String userId,
+    required Map match,
+    required bool pinned,
+  }) async {
+    if (pinned) {
+      final pinnedSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('matchInteractions')
+          .where('pinned', isEqualTo: true)
+          .get();
+      final batch = _firestore.batch();
+      for (final doc in pinnedSnapshot.docs) {
+        batch.set(
+            doc.reference,
+            {
+              'pinned': false,
+              'updatedAt': FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true));
+      }
+      await batch.commit();
+    }
+
+    await _setMatchInteractionFlag(
+      userId: userId,
+      match: match,
+      field: 'pinned',
+      value: pinned,
+    );
+  }
+
+  Future<Map<String, dynamic>?> getPinnedMatch(String userId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('matchInteractions')
+          .where('pinned', isEqualTo: true)
+          .get();
+      if (snapshot.docs.isEmpty) return null;
+
+      final pinned = snapshot.docs.map((doc) => doc.data()).toList();
+      pinned.sort((a, b) {
+        final aDate = a['updatedAt'];
+        final bDate = b['updatedAt'];
+        if (aDate is Timestamp && bDate is Timestamp) {
+          return bDate.compareTo(aDate);
+        }
+        return 0;
+      });
+      return pinned.first;
+    } on FirebaseException catch (e) {
+      print('Error loading pinned match: ${e.code}');
+      return null;
+    }
+  }
+
+  Future<void> _setMatchInteractionFlag({
+    required String userId,
+    required Map match,
+    required String field,
+    required bool value,
+  }) async {
+    final matchId = match['id'].toString();
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('matchInteractions')
+          .doc(matchId)
+          .set({
+        'matchId': matchId,
+        field: value,
+        'match': _compactMatch(match),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } on FirebaseException catch (e) {
+      print('Error saving match interaction: ${e.code}');
+      rethrow;
+    }
+  }
+
+  Map<String, dynamic> _compactMatch(Map match) {
+    return {
+      'id': match['id'],
+      'utcDate': match['utcDate'],
+      'status': match['status'],
+      'homeTeam': match['homeTeam'],
+      'awayTeam': match['awayTeam'],
+      'score': match['score'],
+      'competition': match['competition'],
+    };
   }
 
   int _readInt(dynamic value) {

@@ -11,7 +11,14 @@ import 'package:LiveScore/constants.dart';
 import 'LeagueSelectionScreen.dart';
 
 class Favouriteteamscreen extends StatefulWidget {
-  const Favouriteteamscreen({Key? key}) : super(key: key);
+  final int refreshToken;
+  final VoidCallback? onFavoriteTeamChanged;
+
+  const Favouriteteamscreen({
+    Key? key,
+    this.refreshToken = 0,
+    this.onFavoriteTeamChanged,
+  }) : super(key: key);
 
   @override
   State<Favouriteteamscreen> createState() => _FavouriteteamscreenState();
@@ -39,21 +46,43 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
     _loadUserData();
   }
 
+  @override
+  void didUpdateWidget(covariant Favouriteteamscreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshToken != widget.refreshToken) {
+      _loadUserData();
+    }
+  }
+
   void _loadUserData() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingUser = true;
+      _errorMessage = null;
+      _favoriteTeamName = null;
+      _favoriteTeamId = null;
+      _favoriteTeamCrest = null;
+      _matches = [];
+      _pastMatches = [];
+      _futureMatches = [];
+    });
+
     try {
       User? user = _auth.currentUser;
       if (user != null) {
         String uid = user.uid;
         Map<String, dynamic> userData =
             await _firestoreService.getUserData(uid);
-        if (userData['favorite_team'] != null &&
-            userData['favorite_team_id'] != null) {
+        final teamName = (userData['favorite_team'] ?? '').toString().trim();
+        final teamId = (userData['favorite_team_id'] ?? '').toString().trim();
+
+        if (teamName.isNotEmpty && teamId.isNotEmpty) {
           setState(() {
-            _favoriteTeamName = userData['favorite_team'];
-            _favoriteTeamId = userData['favorite_team_id'];
+            _favoriteTeamName = teamName;
+            _favoriteTeamId = teamId;
           });
           getMatches();
-          getTeamDetails(_favoriteTeamId!);
+          getTeamDetails(teamId);
         }
       }
     } catch (e) {
@@ -103,13 +132,15 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
               MaterialPageRoute(builder: (context) => LeagueSelectionScreen()),
             );
             if (result != null) {
+              final teamId = result['id'].toString();
               setState(() {
                 _favoriteTeamName = result['name'];
-                _favoriteTeamId = result['id'];
+                _favoriteTeamId = teamId;
               });
               getMatches();
-              getTeamDetails(_favoriteTeamId!);
-              _saveFavoriteTeam();
+              getTeamDetails(teamId);
+              await _saveFavoriteTeam();
+              widget.onFavoriteTeamChanged?.call();
             }
           },
           child: Text('Select Favourite Team'),
@@ -223,7 +254,7 @@ class _FavouriteteamscreenState extends State<Favouriteteamscreen> {
     );
   }
 
-  void _saveFavoriteTeam() async {
+  Future<void> _saveFavoriteTeam() async {
     User? user = _auth.currentUser;
     if (user != null) {
       String email = user.email ?? '';

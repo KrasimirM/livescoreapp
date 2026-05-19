@@ -2,17 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'Screens/LoginScreen.dart';
 import 'Screens/HomeScreen.dart';
 import 'Screens/AdminScreen.dart';
 import 'Screens/ForgotPasswordScreen.dart';
 import 'constants.dart';
 import 'Widgets/LoadingView.dart';
+import 'services/NotificationService.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   await Firebase.initializeApp();
-  // await NotificationService.initialize();
+  await NotificationService.initialize();
 
   runApp(MyApp());
 }
@@ -38,18 +41,31 @@ class MyApp extends StatelessWidget {
 
   ThemeData _buildTheme() {
     return ThemeData(
-      brightness: Brightness.light,
+      brightness: Brightness.dark,
+      useMaterial3: true,
       primaryColor: AppColors.primaryColor,
-      colorScheme: ColorScheme.light(
+      colorScheme: ColorScheme.dark(
         primary: AppColors.primaryColor,
         secondary: AppColors.accentColor,
+        surface: AppColors.surfaceColor,
+        error: AppColors.errorColor,
       ),
       scaffoldBackgroundColor: AppColors.backgroundColor,
       appBarTheme: AppBarTheme(
-        color: AppColors.primaryColor,
+        color: AppColors.backgroundColor,
+        elevation: 0,
+        centerTitle: true,
         iconTheme: IconThemeData(color: Colors.white),
         titleTextStyle:
-            TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primaryColor,
+          foregroundColor: AppColors.backgroundColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       textTheme: TextTheme(
         bodyLarge: TextStyle(color: AppColors.textColor),
