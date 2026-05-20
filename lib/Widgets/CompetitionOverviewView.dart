@@ -26,7 +26,7 @@ class CompetitionOverviewView extends StatelessWidget {
     return ListView(
       physics:
           const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 34),
       children: [
         _HubIntro(
           competitionName: competitionName,
@@ -36,11 +36,11 @@ class CompetitionOverviewView extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _SectionHeader(
-          title: 'Next Big Matches',
-          icon: Icons.bolt,
+          title: 'Next matches',
+          icon: Icons.event,
           subtitle: upcomingMatches.isEmpty
-              ? 'No scheduled matches from the API yet'
-              : 'Tap a match to open the preview',
+              ? 'No scheduled matches'
+              : 'Swipe and open preview',
         ),
         const SizedBox(height: 10),
         if (upcomingMatches.isEmpty)
@@ -143,70 +143,96 @@ class _HubIntro extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primaryColor.withAlpha(45),
+            AppColors.secondaryAccentColor.withAlpha(34),
             AppColors.cardBackgroundColor.withAlpha(238),
+            AppColors.primaryColor.withAlpha(24),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withAlpha(16)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Competition hub',
+                      style: TextStyle(
+                        color: AppColors.mutedTextColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      competitionName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textColor,
+                        fontSize: 25,
+                        fontWeight: FontWeight.w900,
+                        height: 1.04,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
               Container(
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: AppColors.accentColor.withAlpha(35),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.dashboard_customize,
-                  color: AppColors.accentColor,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  '$competitionName Hub',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textColor,
-                    fontSize: 21,
-                    fontWeight: FontWeight.w900,
+                  color: AppColors.primaryColor.withAlpha(34),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.primaryColor.withAlpha(95),
                   ),
+                ),
+                child: Icon(
+                  hasBracket ? Icons.account_tree : Icons.table_rows,
+                  color: AppColors.primaryColor,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          const SizedBox(height: 18),
+          Row(
             children: [
-              _HubMetric(
-                icon: Icons.groups,
-                label: 'Teams',
-                value: teamCount.toString(),
+              Expanded(
+                child: _HubMetric(
+                  icon: Icons.groups,
+                  label: 'Teams',
+                  value: teamCount.toString(),
+                ),
               ),
-              _HubMetric(
-                icon: Icons.sports_soccer,
-                label: 'Matches',
-                value: matchCount.toString(),
+              const SizedBox(width: 9),
+              Expanded(
+                child: _HubMetric(
+                  icon: Icons.sports_soccer,
+                  label: 'Matches',
+                  value: matchCount.toString(),
+                ),
               ),
-              _HubMetric(
-                icon: hasBracket ? Icons.account_tree : Icons.table_rows,
-                label: hasBracket ? 'Mode' : 'Focus',
-                value: hasBracket ? 'Bracket' : 'League',
+              const SizedBox(width: 9),
+              Expanded(
+                child: _HubMetric(
+                  icon: hasBracket ? Icons.account_tree : Icons.table_rows,
+                  label: hasBracket ? 'Path' : 'Type',
+                  value: hasBracket ? 'KO' : 'Table',
+                ),
               ),
             ],
           ),
@@ -230,31 +256,38 @@ class _HubMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      constraints: const BoxConstraints(minHeight: 84),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor.withAlpha(220),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.surfaceColor.withAlpha(205),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withAlpha(14)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: AppColors.primaryColor, size: 16),
-          const SizedBox(width: 6),
-          Text(
-            '$label: ',
-            style: const TextStyle(
-              color: AppColors.mutedTextColor,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          const SizedBox(height: 7),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: AppColors.textColor,
-              fontSize: 12,
+              fontSize: 18,
               fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.mutedTextColor,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],

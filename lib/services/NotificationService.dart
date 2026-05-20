@@ -80,6 +80,7 @@ class NotificationService {
         importance: Importance.high,
         priority: Priority.high,
         icon: '@mipmap/ic_launcher',
+        largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
         category: AndroidNotificationCategory.reminder,
         enableVibration: true,
         playSound: true,
@@ -91,6 +92,7 @@ class NotificationService {
       ),
     );
 
+    await _notifications.cancel(notificationId);
     await _notifications.show(
       notificationId,
       'Notification set',
